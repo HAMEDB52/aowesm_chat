@@ -1,5 +1,6 @@
 streamli
 openai
-langhain
+langchain
+langchain_core
 langchain_openai
 langchain_commuinty
