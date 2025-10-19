@@ -2,10 +2,10 @@
 from openai import OpenAI
 import streamlit as st
 
-api_key =st.secrets('OPENAI_API_KEY')
-import streamlit as st
+api_key =st.secrets['OPENAI_API_KEY']
+
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 st.markdown("# ChatGPT-like clone")
 
@@ -22,7 +22,7 @@ llm = ChatOpenAI(
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
 
-if "messages" not in st.session_state:r
+if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Display chat history
