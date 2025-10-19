@@ -1,4 +1,4 @@
-streamli
+streamlit
 openai
 langchain
 langchain_core
