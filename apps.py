@@ -2,7 +2,7 @@
 from openai import OpenAI
 import streamlit as st
 
-api_key =""
+api_key =st.secrets('OPENAI_API_KEY')
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage, SystemMessage
@@ -22,7 +22,7 @@ llm = ChatOpenAI(
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
 
-if "messages" not in st.session_state:
+if "messages" not in st.session_state:r
     st.session_state.messages = []
 
 # Display chat history
