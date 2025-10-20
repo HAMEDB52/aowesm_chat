@@ -1,53 +1,84 @@
-
-from openai import OpenAI
 import streamlit as st
-
-api_key = st.secrets['OPENAI_API_KEY']
-
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
+# ------------------------------------------------------------------
+# 1.  Guard-rail: die early if the secret is not there
+# ------------------------------------------------------------------
+try:
+    api_key = st.secrets["OPENAI_API_KEY"]
+except KeyError:
+    st.error(
+        "OPENAI_API_KEY not found in secrets.  "
+        "Please add it to `.streamlit/secrets.toml` (local) or the Cloud Secrets panel."
+    )
+    st.stop()
+
+# ------------------------------------------------------------------
+# 2.  Page config
+# ------------------------------------------------------------------
 st.markdown("# ChatGPT-like clone")
+st.caption("Powered by LangChain + Streamlit")
 
-st.write("Title")
-
-# Initialize LangChain ChatOpenAI instead of OpenAI client
+# ------------------------------------------------------------------
+# 3.  LangChain LLM
+# ------------------------------------------------------------------
 llm = ChatOpenAI(
     api_key=api_key,
-    model_name="gpt-3.5-turbo",
+    model="gpt-3.5-turbo",
+    temperature=0.7,
     streaming=True,
-    temperature=0.7
 )
 
+# ------------------------------------------------------------------
+# 4.  Session-state defaults
+# ------------------------------------------------------------------
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-3.5-turbo"
 
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    # Optional: give the assistant a personality
+    st.session_state.messages = [
+        {"role": "system", "content": "You are a helpful assistant."}
+    ]
 
-# Display chat history
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# ------------------------------------------------------------------
+# 5.  Render chat history
+# ------------------------------------------------------------------
+for msg in st.session_state.messages:
+    # Skip the system message in the UI
+    if msg["role"] == "system":
+        continue
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-# Handle new user input
+# ------------------------------------------------------------------
+# 6.  Chat input + generate response
+# ------------------------------------------------------------------
 if prompt := st.chat_input("What is up?"):
+    # 6a.  Display user message
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # 6b.  Build LangChain message list
+    langchain_msgs = []
+    for m in st.session_state.messages:
+        if m["role"] == "user":
+            langchain_msgs.append(HumanMessage(content=m["content"]))
+        elif m["role"] == "assistant":
+            langchain_msgs.append(AIMessage(content=m["content"]))
+        elif m["role"] == "system":
+            langchain_msgs.append(SystemMessage(content=m["content"]))
+
+    # 6c.  Stream assistant reply
     with st.chat_message("assistant"):
-        # Convert messages to LangChain format
-        langchain_messages = []
-        for m in st.session_state.messages:
-            if m["role"] == "user":
-                langchain_messages.append(HumanMessage(content=m["content"]))
-            elif m["role"] == "assistant":
-                langchain_messages.append(AIMessage(content=m["content"]))
-            elif m["role"] == "system":
-                langchain_messages.append(SystemMessage(content=m["content"]))
-        
-        # Stream the response
-        response = st.write_stream(llm.stream(langchain_messages))
-    
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        placeholder = st.empty()
+        full_response = ""
+        for chunk in llm.stream(langchain_msgs):
+            full_response += chunk.content
+            placeholder.markdown(full_response + "▌")
+        placeholder.markdown(full_response)
+
+    # 6d.  Persist assistant message
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
