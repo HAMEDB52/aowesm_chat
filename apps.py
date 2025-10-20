@@ -6,7 +6,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 # 1.  Guard-rail: die early if the secret is not there
 # ------------------------------------------------------------------
 try:
-    api_key = st.secrets["OPENAI_API_KEY"]
+    api_key= st.secrets["OPENAI_API_KEY"]
 except KeyError:
     st.error(
         "OPENAI_API_KEY not found in secrets.  "
