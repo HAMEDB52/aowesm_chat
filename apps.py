@@ -7,12 +7,8 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 # ------------------------------------------------------------------
 try:
     api_key= st.secrets["OPENAI_API_KEY"]
-except KeyError:
-    st.error(
-        "OPENAI_API_KEY not found in secrets.  "
-        "Please add it to `.streamlit/secrets.toml` (local) or the Cloud Secrets panel."
-    )
-    st.stop()
+except:
+    api_key = ""
 
 # ------------------------------------------------------------------
 # 2.  Page config
